@@ -61,12 +61,17 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
   end
 
   def get(token, url, headers \\ [], opts \\ []) do
-    access_token = Poison.decode!(token.access_token)
-    url = ~s/#{url}?access_token=#{access_token["access_token"]}&openid=#{access_token["openid"]}/
+    case token do
+      %OAuth2.AccessToken{other_params: %{"error_description" => error_description}} ->
+        {:error, %OAuth2.Error{reason: error_description}}
 
-    [token: token]
-    |> client
-    |> OAuth2.Client.get(url, headers, opts)
+      %OAuth2.AccessToken{access_token: access_token, other_params: %{"openid" => openid}} ->
+        url = "#{url}?#{%{access_token: access_token, openid: openid} |> URI.encode_query()}"
+
+        [token: token]
+        |> client
+        |> OAuth2.Client.get(url, headers, opts)
+    end
   end
 
   def get_token!(params \\ [], options \\ []) do
@@ -74,7 +79,31 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     options = Keyword.get(options, :options, [])
     client_options = Keyword.get(options, :client_options, [])
     client = OAuth2.Client.get_token!(client(client_options), params, headers, options)
-    client.token
+
+    case client.token.access_token |> Jason.decode!(keys: :atoms) do
+      %{errcode: error_code, errmsg: error_description} ->
+        %OAuth2.AccessToken{
+          other_params: %{
+            "error" => "error_#{error_code}",
+            "error_description" => error_description
+          }
+        }
+
+      access_token ->
+        expires_at = Timex.now() |> Timex.shift(seconds: access_token[:expires_in])
+
+        %OAuth2.AccessToken{
+          access_token: access_token[:access_token],
+          expires_at: expires_at,
+          refresh_token: access_token[:refresh_token],
+          token_type: "Bearer",
+          other_params: %{
+            "scope" => access_token[:scope],
+            "openid" => access_token[:openid],
+            "unionid" => access_token[:unionid]
+          }
+        }
+    end
   end
 
   # Strategy Callbacks

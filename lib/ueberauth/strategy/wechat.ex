@@ -47,7 +47,7 @@ defmodule Ueberauth.Strategy.Wechat do
   """
   use Ueberauth.Strategy,
     uid_field: :unionid,
-    default_scope: "snsapi_userinfo",
+    default_scope: "snsapi_userinfo",  # snsapi_login
     oauth2_module: Ueberauth.Strategy.Wechat.OAuth
 
   alias Ueberauth.Auth.Info
@@ -184,7 +184,7 @@ defmodule Ueberauth.Strategy.Wechat do
 
   defp fetch_user(conn, token) do
     conn = put_private(conn, :wechat_token, token)
-    # Will be better with Elixir 1.3 with/else
+
     case Ueberauth.Strategy.Wechat.OAuth.get(token, "/sns/userinfo") do
       {:ok, %OAuth2.Response{status_code: 401, body: _body}} ->
         set_errors!(conn, [error("token", "unauthorized")])
