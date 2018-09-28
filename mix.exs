@@ -5,15 +5,15 @@ defmodule Ueberauth.Wechat.Mixfile do
 
   def project do
     [
-      app: :ueberauth_wechat2,
+      app: :ueberauth_wechat,
       version: @version,
       name: "Ueberauth.Wechat",
       package: package(),
       elixir: "~> 1.3",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      source_url: "https://github.com/dev800/ueberauth_wechat2",
-      homepage_url: "https://github.com/dev800/ueberauth_wechat2",
+      source_url: "https://github.com/dev800/ueberauth_wechat",
+      homepage_url: "https://github.com/dev800/ueberauth_wechat",
       description: description(),
       deps: deps(),
       docs: docs()
@@ -29,7 +29,6 @@ defmodule Ueberauth.Wechat.Mixfile do
       {:oauth2, "~> 0.9"},
       {:ueberauth, "~> 0.4"},
       {:poison, "~> 3.1"},
-      # dev/test only dependencies
       {:credo, "~> 0.8", only: [:dev, :test]},
 
       # docs dependencies
@@ -51,7 +50,7 @@ defmodule Ueberauth.Wechat.Mixfile do
       files: ["lib", "mix.exs", "README.md", "LICENSE"],
       maintainers: ["dev800"],
       licenses: ["MIT"],
-      links: %{GitHub: "https://github.com/dev800/ueberauth_wechat2"}
+      links: %{GitHub: "https://github.com/dev800/ueberauth_wechat"}
     ]
   end
 end

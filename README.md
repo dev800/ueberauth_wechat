@@ -4,11 +4,11 @@
 
 ## Installation
 
-1. Add `:ueberauth_wechat2` to your list of dependencies in `mix.exs`:
+1. Add `:ueberauth_wechat` to your list of dependencies in `mix.exs`:
 
     ```elixir
     def deps do
-      [{:ueberauth_wechat2, "git@github.com:dev800/ueberauth_wechat2.git"}]
+      [{:ueberauth_wechat, "git@github.com:dev800/ueberauth_wechat.git"}]
     end
     ```
 
@@ -16,7 +16,7 @@
 
     ```elixir
     def application do
-      [applications: [:ueberauth_wechat2]]
+      [applications: [:ueberauth_wechat]]
     end
     ```
 
