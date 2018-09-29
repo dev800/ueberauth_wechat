@@ -71,6 +71,9 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
         [token: token]
         |> client
         |> OAuth2.Client.get(url, headers, opts)
+
+      %OAuth2.AccessToken{} ->
+        {:error, %OAuth2.Error{reason: "missing other_params: %{\"openid\" => xxx}"}}
     end
   end
 
