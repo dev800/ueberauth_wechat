@@ -132,12 +132,14 @@ defmodule Ueberauth.Strategy.Wechat do
   Fetches the uid field from the Wechat response. This defaults to the option `uid_field` which in-turn defaults to `id`
   """
   def uid(conn) do
-    user =
+    uid_field =
       conn
       |> option(:uid_field)
       |> to_string
 
-    conn.private.wechat_user[user]
+    if conn.private[:wechat_user] do
+      conn.private.wechat_user[uid_field]
+    end
   end
 
   @doc """
@@ -182,7 +184,7 @@ defmodule Ueberauth.Strategy.Wechat do
     }
   end
 
-  defp fetch_user(conn, token) do
+  def fetch_user(conn, token) do
     conn = put_private(conn, :wechat_token, token)
 
     case Ueberauth.Strategy.Wechat.OAuth.get(token, "/sns/userinfo") do
@@ -199,6 +201,6 @@ defmodule Ueberauth.Strategy.Wechat do
   end
 
   defp option(conn, key) do
-    Keyword.get(options(conn), key, Keyword.get(default_options(), key))
+    Keyword.get(options(conn) || %{}, key, Keyword.get(default_options(), key))
   end
 end
