@@ -15,7 +15,8 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     site: "https://api.weixin.qq.com",
     authorize_url: "https://open.weixin.qq.com/connect/oauth2/authorize",
     qrcode_authorize_url: "https://open.weixin.qq.com/connect/qrconnect",
-    token_url: "https://api.weixin.qq.com/sns/oauth2/access_token"
+    token_url: "https://api.weixin.qq.com/sns/oauth2/access_token",
+    refresh_token_url: "https://api.weixin.qq.com/sns/oauth2/refresh_token"
   ]
 
   @doc """
@@ -83,7 +84,41 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     client_options = Keyword.get(options, :client_options, [])
     client = OAuth2.Client.get_token!(client(client_options), params, headers, options)
 
-    case client.token.access_token |> Jason.decode!(keys: :atoms) do
+    client.token.access_token
+    |> Jason.decode!(keys: :atoms)
+    |> _parse_access_token()
+  end
+
+  # https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
+  def refresh_token!(refresh_token, options \\ []) do
+    headers = Keyword.get(options, :headers, [])
+    options = Keyword.get(options, :options, [])
+    client = Keyword.get(options, :client_options, []) |> client()
+
+    url =
+      "#{@defaults[:refresh_token_url]}?#{
+        URI.encode_query(%{
+          appid: client.client_id,
+          grant_type: "refresh_token",
+          refresh_token: refresh_token
+        })
+      }"
+
+    url
+    |> HTTPoison.get(headers)
+    |> case do
+      {:ok, %HTTPoison.Response{body: body, status_code: 200}} ->
+        body
+        |> Jason.decode!(keys: :atoms)
+        |> _parse_access_token()
+
+      _ ->
+        {:error, %OAuth2.Error{reason: "Request Fail"}}
+    end
+  end
+
+  defp _parse_access_token(body) do
+    case body do
       %{errcode: error_code, errmsg: error_description} ->
         %OAuth2.AccessToken{
           other_params: %{
