@@ -30,18 +30,9 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
   These options are only useful for usage outside the normal callback phase of Ueberauth.
   """
   def client(opts \\ []) do
-    config =
-      :ueberauth
-      |> Application.fetch_env!(Ueberauth.Strategy.Wechat.OAuth)
-      |> check_config_key_exists(:client_id)
-      |> check_config_key_exists(:client_secret)
-
-    client_opts =
-      @defaults
-      |> Keyword.merge(config)
-      |> Keyword.merge(opts)
-
-    OAuth2.Client.new(client_opts)
+    @defaults
+    |> Keyword.merge(opts[:config] || [])
+    |> OAuth2.Client.new()
   end
 
   @doc """
@@ -51,6 +42,7 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     opts
     |> client
     |> OAuth2.Client.authorize_url!(params)
+    |> Kernel.<>("#wechat_redirect")
   end
 
   def qrcode_authorize_url!(params \\ [], opts \\ []) do
@@ -59,6 +51,7 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     oauth_client
     |> OAuth2.Client.authorize_url!(params)
     |> String.replace(oauth_client.authorize_url, @defaults[:qrcode_authorize_url], global: false)
+    |> Kernel.<>("#wechat_redirect")
   end
 
   def get(token, url, headers \\ [], opts \\ []) do
@@ -167,17 +160,5 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
     |> put_param(:secret, client.client_secret)
     |> put_header("Accept", "application/json")
     |> OAuth2.Strategy.AuthCode.get_token(params, headers)
-  end
-
-  defp check_config_key_exists(config, key) when is_list(config) do
-    unless Keyword.has_key?(config, key) do
-      raise "#{inspect(key)} missing from config :ueberauth, Ueberauth.Strategy.Wechat"
-    end
-
-    config
-  end
-
-  defp check_config_key_exists(_, _) do
-    raise "Config :ueberauth, Ueberauth.Strategy.Wechat is not a keyword list, as expected"
   end
 end
