@@ -80,7 +80,7 @@ defmodule Ueberauth.Strategy.Wechat do
     opts =
       if conn.params["state"], do: Keyword.put(opts, :state, conn.params["state"]), else: opts
 
-    if wechat_request?(conn) && Keyword.get(config, :client_authorizeable, true) do
+    if wechat_request?(conn) do
       redirect!(conn, apply(module, :authorize_url!, [opts]))
     else
       redirect!(conn, apply(module, :qrcode_authorize_url!, [opts]))
