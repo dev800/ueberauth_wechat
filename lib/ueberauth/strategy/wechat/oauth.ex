@@ -59,15 +59,15 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
       %OAuth2.AccessToken{other_params: %{"error_description" => error_description}} ->
         {:error, %OAuth2.Error{reason: error_description}}
 
-      %OAuth2.AccessToken{access_token: access_token, other_params: %{"openid" => openid}} ->
-        url = "#{url}?#{%{access_token: access_token, openid: openid} |> URI.encode_query()}"
+      %OAuth2.AccessToken{access_token: access_token} ->
+        url = "#{url}?#{%{access_token: access_token, openid: "xxx"} |> URI.encode_query()}"
 
         [token: token]
         |> client
         |> OAuth2.Client.get(url, headers, opts)
 
-      %OAuth2.AccessToken{} ->
-        {:error, %OAuth2.Error{reason: "missing other_params: %{\"openid\" => xxx}"}}
+      _ ->
+        {:error, %OAuth2.Error{reason: "access token params error"}}
     end
   end
 
@@ -130,7 +130,7 @@ defmodule Ueberauth.Strategy.Wechat.OAuth do
           token_type: "Bearer",
           other_params: %{
             "scope" => access_token[:scope],
-            "openid" => access_token[:openid],
+            "open_id" => access_token[:openid],
             "unionid" => access_token[:unionid]
           }
         }

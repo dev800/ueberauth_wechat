@@ -54,6 +54,8 @@ defmodule Ueberauth.Strategy.Wechat do
   alias Ueberauth.Auth.Credentials
   alias Ueberauth.Auth.Extra
 
+  def oauth2_module, do: Ueberauth.Strategy.Wechat.OAuth
+
   def secure_random_hex(n \\ 16) do
     n
     |> :crypto.strong_rand_bytes()
@@ -114,7 +116,7 @@ defmodule Ueberauth.Strategy.Wechat do
 
     client_options =
       conn.private
-      |> Map.get(:ueberauth_request_options, [])
+      |> Map.get(:ueberauth_request_options, %{})
       |> Map.get(:options, [])
 
     options = [client_options: [config: client_options]]
@@ -185,15 +187,47 @@ defmodule Ueberauth.Strategy.Wechat do
     }
   end
 
+  def present?(str), do: str |> to_string() |> String.length() > 0
+
   @doc """
   Fetches the fields to populate the info section of the `Ueberauth.Auth` struct.
   """
   def info(conn) do
     user = conn.private.wechat_user
 
+    gender =
+      case user["sex"] do
+        "1" ->
+          :male
+
+        "0" ->
+          :female
+
+        "男" ->
+          :male
+
+        "女" ->
+          :female
+
+        "male" ->
+          :male
+
+        "female" ->
+          :female
+
+        _ ->
+          :default
+      end
+
+    areas =
+      [user["country"], user["province"], user["city"]]
+      |> Enum.filter(fn area -> present?(area) end)
+
     %Info{
       nickname: user["nickname"],
-      image: user["headimgurl"]
+      image: user["headimgurl"],
+      areas: areas,
+      gender: gender
     }
   end
 
